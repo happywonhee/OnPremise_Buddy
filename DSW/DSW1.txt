@@ -1,0 +1,243 @@
+[ DSW(Data Line Switch) 1 ]
+
+ # 7-1. 기본 설정
+Switch>enable
+Switch#configure terminal 
+Switch(config)#hostname DSW1
+DSW1(config)#enable secret cisco123
+DSW1(config)#username admin secret cisco123
+DSW1(config)#no ip domain-lookup
+
+
+ # 7-2. 콘솔 환경 설정
+DSW1(config)#line console 0
+DSW1(config-line)#logging synchronous
+DSW1(config-line)#exec-timeout 10 0
+DSW1(config-line)#password cisco123
+DSW1(config-line)#login local
+DSW1(config-line)#exit
+
+DSW1(config)#line vty 0 1
+DSW1(config-line)#logging synchronous
+DSW1(config-line)#exec-timeout 05 0
+DSW1(config-line)#password cisco123
+DSW1(config-line)#login local
+DSW1(config-line)#exit
+
+DSW1(config-line)#interface range e 0/0-3, e 1/0-3, e 2/0-3, e 3/0-3
+DSW1(config-line)#shutdown
+DSW1(config-line)#exit
+
+# 7-3. VLAN 생성
+DSW1(config)#vlan 10
+DSW1(config-vlan)#name DB/Storage
+DSW1(config-vlan)#exit
+
+DSW1(config)#vlan 15
+DSW1(config-vlan)#name WAS
+DSW1(config-vlan)#exit
+
+DSW1(config)#vlan 20
+DSW1(config-vlan)#name DMZ
+DSW1(config-vlan)#exit
+
+DSW1(config)#vlan 100
+DSW1(config-vlan)#name TST
+DSW1(config-vlan)#exit
+
+DSW1(config)#vlan 200
+DSW1(config-vlan)#name MST
+DSW1(config-vlan)#exit
+
+DSW1(config)#vlan 250
+DSW1(config-vlan)#name DET
+DSW1(config-vlan)#exit
+
+DSW1(config)#vlan 254
+DSW1(config-vlan)#name TEST
+DSW1(config-vlan)#exit
+
+ # 7-4. Interface 설정
+DSW1(config)#interface range ethernet 0/0-3, e 1/0-3, e 2/0-3, e 3/0-3
+DSW1(config)#shutdown
+DSW1(config)#exit
+
+● # Router Connection 설정 ( DSW1_CE )
+DSW1(config)#interface ethernet 0/0
+DSW1(config-if)#desc ##CE_Connection##
+DSW1(config-if)#no shutdown
+DSW1(config-if)#ip address 10.10.30.1 255.255.255.252
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+● # DSW2 Connection 설정 ( DSW1_DSW2 )
+DSW1(config)#interface ethernet 1/0
+DSW1(config-if)#desc ##DSW2_Connection##
+DSW1(config-if)#no shutdown
+DSW1(config-if)#ip address 10.10.30.9 255.255.255.252
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+ # 7-5. Trunk Prot 설정 및 Port Channel 구성 (Active)
+● # Vlan 10
+DSW1(config)#interface range e2/0-1
+DSW1(config-if-range)#desc ##SERVER_Trunk_Port##
+DSW1(config-if-range)#switchport trunk encap dot1q
+DSW1(config-if-range)#switchport trunk allow vlan 10,vlan 15,vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+DSW1(config-if-range)#switchport mode trunk
+DSW1(config-if-range)#switchport nonegotiate
+DSW1(config-if-range)#switchport trunk native vlan 999
+DSW1(config-if-range)#channel-group 1 mode active
+DSW1(config-if-range)#no shutdown
+DSW1(config-if-range)#exit
+
+● # Vlan15
+DSW1(config)#interface range e3/2-3
+DSW1(config-if-range)#desc ##TS_Trunk_Port##
+DSW1(config-if-range)#switchport trunk encap dot1q
+DSW1(config-if-range)#switchport trunk allow vlan 10,vlan 15,vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+DSW1(config-if-range)#switchport mode trunk
+DSW1(config-if-range)#switchport nonegotiate
+DSW1(config-if-range)#switchport trunk native vla 999
+DSW1(config-if-range)#channel-group 5 mo active
+DSW1(config-if-range)#no shutdown
+
+● # Vlan20
+DSW1(config)#interface range e3/0-1
+DSW1(config-if-range)#desc ##DMZ_Trunk_Port##
+DSW1(config-if-range)#switchport trunk encap dot1q
+DSW1(config-if-range)#switchport trunk allow vlan 10,vlan 15,vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+DSW1(config-if-range)#switchport mode trunk
+DSW1(config-if-range)#switchport nonegotiate
+DSW1(config-if-range)#sw tr native vla 999
+DSW1(config-if-range)#channel-group 2 mo active
+DSW1(config-if-range)#no shutdown
+
+● # Vlan200
+DSW1(config)#interface range e1/2-3
+DSW1(config-if-range)#desc ##MS_Trunk_Port##
+DSW1(config-if-range)#switchport trunk encap dot1q
+DSW1(config-if-range)#switchport trunk allow vlan 10,vlan 15,vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+DSW1(config-if-range)#switchport mode trunk
+DSW1(config-if-range)#switchport nonegotiate
+DSW1(config-if-range)#sw tr native vla 999
+DSW1(config-if-range)#channel-group 4 mo active
+DSW1(config-if-range)#no shutdown
+
+● # Vlan250
+DSW1(config)#interface range e2/2-3
+DSW1(config-if-range)#desc ##DP_Trunk_Port##
+DSW1(config-if-range)#switchport trunk encap dot1q
+DSW1(config-if-range)#sw tru allow vlan 10,vlan 15,vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+DSW1(config-if-range)#switchport mode trunk
+DSW1(config-if-range)#switchport nonegotiate
+DSW1(config-if-range)#sw tr native vla 999
+DSW1(config-if-range)#channel-group 3 mo active
+DSW1(config-if-range)#no shutdown
+
+● # Vlan254
+DSW1(config)#interface range e4/0-1
+DSW1(config-if-range)#desc ##DP_Trunk_Port##
+DSW1(config-if-range)#switchport trunk encap dot1q
+DSW1(config-if-range)#sw tru allow vlan 10,vlan 15,vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+DSW1(config-if-range)#switchport mode trunk
+DSW1(config-if-range)#switchport nonegotiate
+DSW1(config-if-range)#sw tr native vla 999
+DSW1(config-if-range)#channel-group 3 mo active
+DSW1(config-if-range)#no shutdown
+
+● # Vlan100
+DSW1(config)#interface range e0/1-2
+DSW1(config-if-range)#desc ##TS_Trunk_Port##
+DSW1(config-if-range)#switchport trunk encap dot1q
+DSW1(config-if-range)#switchport trunk allow vlan 10,vlan 15,vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+DSW1(config-if-range)#switchport mode trunk
+DSW1(config-if-range)#switchport nonegotiate
+DSW1(config-if-range)#switchport trunk native vla 999
+DSW1(config-if-range)#channel-group 5 mo active
+DSW1(config-if-range)#no shutdown
+
+
+
+ # 7-6. Inter-VLAN설정 및 VRRP
+DSW1(config)#track 1 interface ethernet 0/0 line-protocol
+DSW1(config)#exit
+
+● # Vlan10
+DSW1(config)#interface vlan 10
+DSW1(config-if)#desc ##VLAN10_GW##
+DSW1(config-if)#ip address 10.10.10.252 255.255.255.0
+DSW1(config-if)#vrrp 10 ip 10.10.10.254
+DSW1(config-if)#vrrp 10 priority 110
+DSW1(config-if)#vrrp 10 track 1 decrement 50
+DSW1(config-if)#vrrp 10 preempt delay mini 30
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+● # Vlan15
+DSW1(config)#interface vlan 10
+DSW1(config-if)#desc ##VLAN10_GW##
+DSW1(config-if)#ip address 10.10.15.252 255.255.255.0
+DSW1(config-if)#vrrp 10 ip 10.10.15.254
+DSW1(config-if)#vrrp 10 priority 110
+DSW1(config-if)#vrrp 10 track 1 decrement 50
+DSW1(config-if)#vrrp 10 preempt delay mini 30
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+● # Vlan20
+DSW1(config)#interface vlan 20
+DSW1(config-if)#desc ##VLAN20_GW##
+DSW1(config-if)#ip address 10.10.20.252 255.255.255.0
+DSW1(config-if)#vrrp 20 ip 10.10.20.254
+DSW1(config-if)#vrrp 20 preempt
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+● # Vlan100
+DSW1(config)#interface vlan 100
+DSW1(config-if)#desc ##VLAN100_GW##   
+DSW1(config-if)#ip add 10.10.100.252 255.255.255.0
+DSW1(config-if)#vrrp 100 ip 10.10.100.254
+DSW1(config-if)#vrrp 100 priority 110
+DSW1(config-if)#vrrp 100 track 1 decrement 50
+DSW1(config-if)#vrrp 100 preempt delay minimum 30
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+● # Vlan200
+DSW1(config)#interface vlan 200
+DSW1(config-if)#desc ##VLAN200_GW##
+DSW1(config-if)#ip add 10.10.200.252 255.255.255.0
+DSW1(config-if)#vrrp 200 ip 10.10.200.254
+DSW1(config-if)#vrrp 200 preempt 
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+● # Vlan250
+DSW1(config)#interface vlan 250
+DSW1(config-if)#desc ##VLAN250_GW##
+DSW1(config-if)#ip add 10.10.250.252 255.255.255.0
+DSW1(config-if)#vrrp 250 ip 10.10.250.254
+DSW1(config-if)#vrrp 250 priority 110
+DSW1(config-if)#vrrp 250 track 1 decrement 50
+DSW1(config-if)#vrrp 250 preempt delay mini 30
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+● # Vlan254
+DSW1(config)#interface vlan 254
+DSW1(config-if)#desc ##VLAN250_GW##
+DSW1(config-if)#ip add 10.10.254.252 255.255.255.0
+DSW1(config-if)#vrrp 250 ip 10.10.250.254
+DSW1(config-if)#vrrp 250 priority 110
+DSW1(config-if)#vrrp 250 track 1 decrement 50
+DSW1(config-if)#vrrp 250 preempt delay mini 30
+DSW1(config-if)#no shutdown
+DSW1(config-if)#exit
+
+
+● # RSTP 및 VLAN 우선순위 조정
+DSW1(config)#spanning-tree vlan 10 priority 4096
+DSW1(config)#spanning-tree vlan 100 priority 4096
+DSW1(config)#spanning-tree vlan 250 priority 4096

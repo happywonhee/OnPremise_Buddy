@@ -1,0 +1,82 @@
+[ ASW 2 – DMZ ]
+
+# 3-1.  기본 설정
+Switch>enable
+Switch#configure terminal 
+Switch(config)#hostname ASW2
+ASW2(config)#enable secret cisco123
+ASW1(config)#username admin secret cisco123
+ASW2(config)#no ip domain lookup
+
+# 3-2.  콘솔 환경 설정
+ASW2(config)#line console 0
+ASW2(config-line)#logging synchronous
+ASW2(config-line)#exec-timeout 10 0
+ASW2(config-line)#password cisco123
+ASW2(config-line)#login local
+ASW2(config-line)#exit
+
+ASW2(config)#line vty 0 1
+ASW2(config-line)#logging synchronous
+ASW2(config-line)#exec-timeout 05 0
+ASW2(config-line)#password cisco123
+ASW2(config-line)#login local
+ASW2(config-line)#exit
+
+ASW2(config)#interface range ethernet 0/0-3, e 1/0-3, e 2/0-3, e 3/0-3
+ASW2(config-if-range)#shutdown
+ASW2(config-if-range)#exit
+
+# 3-3.  VLAN 생성 및 Access Port 설정
+# [VLAN 생성]
+ASW2(config)#vlan 20
+ASW2(config-vlan)#name DMZ
+ASW2(config-vlan)#exit
+
+# [VLAN Access Link]
+● # ASW2_DNS
+ASW2(config)#interface range ethernet 0/0-1
+ASW2(config-if)#description ##ASW2_DNS##
+ASW2(config-if)#switchport mode access
+ASW2(config-if)#switchport access vlan 20
+ASW2(config-if)#spanning-tree portfast
+ASW2(config-if)#no shutdown
+ASW2(config-if)#exit
+
+● # ASW2_Proxy
+ASW2(config)#interface range ethernet 1/0-1
+ASW2(config-if)#description ##ASW2_Proxy##
+ASW2(config-if)#switchport mode access
+ASW2(config-if)#switchport access vlan 20
+ASW2(config-if)#spanning-tree portfast
+ASW2(config-if)#no shutdown
+ASW2(config-if)#exit
+
+ 3-4.  Trunk Prot 설정 및 Port Channel 구성 (Active)
+● # ASW2_DSW1
+ASW2(config)#int range e2/0-1
+ASW2(config-if-range)#description ##ASW2_Trunk_Por1t##
+ASW2(config-if-range)#switchport trunk encapsulation dot1q
+ASW2(config-if-range)#switchport trunk allowed vlan 20,vlan 100,vlan 200,vlan 250
+ASW2(config-if-range)#switchport trunk native vlan 999
+ASW2(config-if-range)#switchport mode trunk
+ASW2(config-if-range)#switchport nonegotiate
+ASW2(config-if-range)#channel-group 1 mode active
+ASW2(config-if-range)#no shutdown
+ASW2(config-if-range)#exit
+
+● # ASW2_DSW2
+ASW2(config)#int range e3/0-1
+ASW2(config-if-range)#description ##ASW2_Trunk_Port##
+ASW2(config-if-range)#switchport trunk encapsulation dot1q
+ASW2(config-if-range)#switchport trunk allowed vlan 20,vlan 100,vlan 200,vlan 250
+ASW2(config-if-range)#switchport trunk native vlan 999
+ASW2(config-if-range)#switchport mode trunk
+ASW2(config-if-range)#switchport nonegotiate
+ASW2(config-if-range)#channel-group 2 mode active
+ASW2(config-if-range)#no shutdown
+ASW2(config-if-range)#exit
+
+
+
+ASW3(config-if-range)#exit

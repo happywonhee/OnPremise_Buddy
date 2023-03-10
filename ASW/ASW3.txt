@@ -1,0 +1,81 @@
+[ ASW 3 – 개발사업팀 ]
+
+# 4-1. 기본설정
+Switch>enable
+Switch#configure terminal 
+Switch(config)#hostname ASW3
+ASW3(config)#enable secret cisco123
+ASW3(config)#username admin secret cisco123
+ASW3(config)#no ip domain lookup
+
+# 4-2. 콘솔 환경 설정
+ASW3(config)#line console 0
+ASW3(config-line)#logging synchronous
+ASW3(config-line)#exec-timeout 10 0
+ASW3(config-line)#password cisco123
+ASW3(config-line)#login local
+ASW3(config-line)#exit
+
+ASW3((config)#line vty 0 1
+ASW3((config-line)#logging synchronous
+ASW3((config-line)#exec-timeout 05 0
+ASW3((config-line)#password cisco123
+ASW3((config-line)#login local
+ASW3((config-line)#exit
+
+ASW3(config)#interface range e 0/0-3, e 1/0-3, e 2/0-3, e 3/0-3
+ASW3(config-if-range)#shutdown
+ASW3(config-if-range)#exit
+
+# 4-3. VLAN 생성 및 Access Port 설정
+# [VLAN 생성]
+ASW3(config)#vlan 250
+ASW3(config-vlan)#name DEP
+ASW3(config-vlan)#exit
+
+ASW3(config)#vlan 255
+ASW3(config-vlan)#name TEST
+ASW3(config-vlan)#exit
+
+# [VLAN Access Link]
+● # AWS3_DEP
+ASW3(config)#interface range ethernet 1/0-3
+ASW3(config-if)#description ##AWS-DEP##
+ASW3(config-if)#switchport mode access
+ASW3(config-if)#switchport access vlan 250
+ASW3(config-if)#spanning-tree portfast
+ASW3(config-if)#no shutdown
+ASW3(config-if)#exit
+
+● # AWS_TEST
+ASW3(config)#interface ethernet 1/1
+ASW3(config-if)#description ##ASW_TEST##
+ASW3(config-if)#switchport mode access
+ASW3(config-if)#switchport access vlan 255
+ASW3(config-if)#spanning-tree portfast
+ASW3(config-if)#no shutdown
+ASW3(config-if)#exit
+
+# 4-4. Trunk Prot 설정 및 Port Channel 구성 (Active)
+● # ASW3_DSW1
+ASW3(config)#interface range ethernet 2/2-3
+ASW3(config-if-range)#description ##DSW1_Uplink_Trunk_Port##
+ASW3(config-if-range)#switchport trunk encapsulation dot1q
+ASW3(config-if-range)#switchport trunk allowed vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+ASW3(config-if-range)#switchport trunk native vlan 999
+ASW3(config-if-range)#switchport mode trunk
+ASW3(config-if-range)#switchport nonegotiate
+ASW3(config-if-range)#channel-group 1 mode active
+ASW3(config-if-range)#no shutdown
+ASW3(config-if-range)#exit
+
+● # ASW3_DSW2
+ASW3(config)#interface range ethernet 3/2-3
+ASW3(config-if-range)#description ##DSW2_Uplink_Trunk_Port##
+ASW3(config-if-range)#switchport trunk encapsulation dot1q
+ASW3(config-if-range)#switchport trunk allowed vlan 20,vlan 100.vlan 200,vlan 250,vlan 254
+ASW3(config-if-range)#switchport trunk native vlan 999
+ASW3(config-if-range)#switchport mode trunk
+ASW3(config-if-range)#switchport nonegotiate
+ASW3(config-if-range)#channel-group 2 mode active
+ASW3(config-if-range)#no shutdown

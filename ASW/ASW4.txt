@@ -1,0 +1,79 @@
+[ ASW 4 -경영지원팀 ]
+
+# 5-1. 기본설정
+Switch>enable
+Switch#configure terminal 
+Switch(config)#hostname ASW4
+ASW4(config)#enable secret cisco123
+ASW4(config)#username admin secret cisco123
+ASW4(config)#no ip domain lookup
+
+# 5-2. 콘솔 환경 설정
+ASW4(config)#line console 0
+ASW4(config-line)#logging synchronous
+ASW4(config-line)#exec-timeout 10 0
+ASW4(config-line)#password cisco123
+ASW4(config-line)#login local
+ASW4(config-line)#exit
+
+ASW4(config)#line vty 0 1
+ASW4(config-line)#logging synchronous
+ASW4(config-line)#exec-timeout 05 0
+ASW4(config-line)#password cisco123
+ASW4(config-line)#login local
+ASW4(config-line)#exit
+
+ASW4(config)#interface range ethernet  0/0-3, e 1/0-3, e 2/0-3, e 3/0-3
+ASW4(config-if-range)#shutdown
+ASW4(config-if-range)#exit
+
+# 5-3. VLAN 생성 및 Access Port 설정
+# [VLAN 생성]
+AWS4(config)#vlan 200
+AWS4(config-vlan)#name MST
+AWS4(config-vlan)#exit
+
+
+# [VLAN Access Link]
+● # ASW_PC3
+ASW4(config)#interface ethernet 1/0
+ASW4(config-if)#description ##ASW4_PC3##
+ASW4(config-if)#switchport mode access
+ASW4(config-if)#switchport access vlan 200
+ASW4(config-if)#spanning-tree portfast
+ASW4(config-if)#no shutdown
+ASW4(config-if)#exit
+
+● # ASW4_PC4
+ASW4(config)#interface ethernet 1/1
+ASW4(config-if)#description ##ASW4_PC4##
+ASW4(config-if)#switchport mode access
+ASW4(config-if)#switchport access vlan 200
+ASW4(config-if)#spanning-tree portfast
+ASW4(config-if)#no shutdown
+ASW4(config-if)#exit
+
+ # 5-4. Trunk Prot 설정 및 Port Channel 구성 (Active) 
+● # ASW4_DSW1
+ASW4(config)#interface range ethernet 1/2-3
+ASW4(config-if-range)#description ##DSW1_Uplink_Trunk_Port##
+ASW4(config-if-range)#switchport trunk encapsulation dot1q
+ASW4(config-if-range)#switchport trunk allowed vlan 20,vlan 100.vlan 200,vlan 250
+ASW4(config-if-range)#switchport trunk native vlan 999
+ASW4(config-if-range)#switchport mode trunk
+ASW4(config-if-range)#switchport nonegotiate
+ASW4(config-if-range)#channel-group 1 mode active
+ASW4(config-if-range)#no shutdown
+ASW4(config-if-range)#exit
+
+● # AWS4_DSW2
+ASW4(config)#interface range ethernet 0/2-3
+ASW4(config-if-range)#description ##DSW2_Uplink_Trunk_Port##
+ASW4(config-if-range)#switchport trunk encapsulation dot1q
+ASW4(config-if-range)#switchport trunk allowed vlan 20,vlan 100.vlan 200,vlan 250
+ASW4(config-if-range)#switchport trunk native vlan 999
+ASW4(config-if-range)#switchport mode trunk
+ASW4(config-if-range)#switchport nonegotiate
+ASW4(config-if-range)#channel-group 2 mode active
+ASW4(config-if-range)#no shutdown
+ASW4(config-if-range)#exit

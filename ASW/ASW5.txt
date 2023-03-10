@@ -1,0 +1,78 @@
+[ ASW 5 – 기술지원팀 ]
+
+ # 6-1. 기본설정
+Switch>enable
+Switch#configure terminal 
+Switch(config)#hostname ASW5
+ASW5(config)#enable secret cisco123
+ASW5(config)#username admin secret cisco123
+ASW5(config)#no ip domain lookup
+
+# 6-2. 콘솔 환경 설정
+ASW5(config)#line console 0
+ASW5(config-line)#logging synchronous
+ASW5(config-line)#exec-timeout 10 0
+ASW5(config-line)#password cisco123
+ASW5(config-line)#login
+ASW5(config-line)#exit
+
+ASW5(config)#line vty 0 1
+ASW5(config-line)#logging synchronous
+ASW5(config-line)#exec-timeout 05 0
+ASW5(config-line)#password cisco123
+ASW5(config-line)#login local
+ASW5(config-line)#exit
+
+ASW5(config)#interface range ethernet  0/0-3, e 1/0-3, e 2/0-3, e 3/0-3
+ASW5(config-if-range)#shutdown
+ASW5(config-if-range)#exit
+
+ # 6-3. VLAN 생성 및 Access Port 설정
+# [VLAN 생성]
+ASW5(config)#vlan 100
+ASW5(config-vlan)#name TST
+ASW5(config-vlan)#exit
+
+# [VLAN Access Link]
+● # ASW5_PC1
+ASW5(config)#interface ethernet 1/0
+ASW5(config-if)#description ##ASW5_PC1##
+ASW5(config-if)#switchport mode access
+ASW5(config-if)#switchport access vlan 100
+ASW5(config-if)#spanning-tree portfast
+ASW5(config-if)#no shutdown
+ASW5(config-if)#exit
+
+● # ASW5_PC2
+ASW5(config)#interface ethernet 1/1
+ASW5(config-if)#description ##ASW5_PC2##
+ASW5(config-if)#switchport mode access
+ASW5(config-if)#switchport access vlan 100
+ASW5(config-if)#spanning-tree portfast
+ASW5(config-if)#no shutdown
+ASW5(config-if)#exit
+
+ # 6-4. Trunk Prot 설정 및 Port Channel 구성 (Active)
+● # ASW5_DSW1
+ASW5(config)#interface range ethernet 0/2-3
+ASW5(config-if-range)#description ##DSW1_Uplink_Trunk_Port##
+ASW5(config-if-range)#switchport trunk encapsulation dot1q
+ASW5(config-if-range)#switchport trunk allowed vlan 20,vlan 100.vlan 200,vlan 250
+ASW5(config-if-range)#switchport trunk native vlan 999
+ASW5(config-if-range)#switchport mode trunk
+ASW5(config-if-range)#switchport nonegotiate
+ASW5(config-if-range)#channel-group 1 mode active
+ASW5(config-if-range)#no shutdown
+ASW5(config-if-range)#exit
+
+● # ASW5_DSW2
+ASW5(config)interface range ethernet 0/0-1
+ASW5(config-if-range)#description ##DSW2_Uplink_Trunk_Port##
+ASW5(config-if-range)#switchport trunk encapsulation dot1q
+ASW5(config-if-range)#switchport trunk allowed vlan 20,vlan 100.vlan 200,vlan 250
+ASW5(config-if-range)#switchport trunk native vlan 999
+ASW5(config-if-range)#switchport mode trunk
+ASW5(config-if-range)#switchport nonegotiate
+ASW5(config-if-range)#channel-group 2 mode active
+ASW5(config-if-range)#no shutdown
+ASW5(config-if-range)#exit

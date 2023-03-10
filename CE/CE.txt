@@ -1,0 +1,127 @@
+[ CE (Customer Edge Router) ]
+
+＃ 9-1. 기본 설정
+R1#configure terminal 
+#Global Configuration 모드로 진입합니다.
+R1(config)#hostname CE
+#장비명을 변경합니다.
+CE(config)#enable secret cisco123
+#유저 모드에서 관리자 모드로 진입할 때 사용할 패스워드를 설정합니다. 
+CE(config)#username admin secret cisco123
+#admin이라는 유저를 생성하고 비밀번호는 cisco123로 설정합니다
+CE(config)#no ip domain lookup
+#도메인 lookup 기능을 비활성화 합니다.
+
+ #　9-2. 콘솔 환경 설정
+CE(config)#line console 0
+#콘솔이 연결되는 0번째 포트로 들어갑니다
+CE(config-line)#logging synchronous
+#터미널 창에서 로그 메시지와 명령창을 분리합니다.
+CE(config-line)#exec-timeout 10 0
+#세션 타임 아웃 시간을 10분으로 설정합니다. 
+CE(config-line)#password cisco123
+#콘솔로 접속할 때 사용할 패스워드를 설정해줍니다
+CE(config-line)#login local
+#login을 활성화 합니다, 보안을 위해 유저 네임도 입력받습니다
+CE(config-line)#exit
+
+CE(config)#line vty 0 1
+#원격 연결할 수 있는 포트를 생성합니다
+CE(config-line)#logging synchronous
+#터미널 창에서 로그 메시지와 명령창을 분리합니다.
+CE(config-line)#exec-timeout 05 0
+#세션 타임 아웃 시간을 5분으로 설정합니다. 
+CE(config-line)#password cisco123
+#원격으로 접속할 때 사용할 패스워드를 설정해줍니다
+CE(config-line)#login local
+#login을 활성화 합니다.
+CE(config-line)#exit
+
+＃　9-3. 인터페이스 설정
+CE(config)#interface range ethernet 0/0-3, ethernet 1/0-3
+#interface 진입 명령어에 range 옵션을 사용하여 한번에 다수의 인터페이스에 진입합니다.
+CE(config-if-range)#shutdown
+#보안을 위해 모든 포트를 다운시킵니다.
+CE(config-if-range)#exit
+
+● ＃　DSW1_CE
+CE(config)#interface ethernet 0/0
+#ethernet 0/0 인터페이스에 진입합니다.
+CE(config-if)#desc ##DSW1_Connection##
+#해당 연결에 대한 주석을 달아줍니다.
+CE(config-if)#ip address 10.10.30.2 255.255.255.252
+# ip주소를 10.10.30.2로 설정합니다
+CE(config-if)#no shutdown
+# 포트 활성화를 해줍니다
+CE(config-if)#exit
+
+● ＃　DSW2_CE
+CE(config)#interface ethernet 1/1
+#ethernet 1/1 인터페이스에 진입합니다.
+CE(config-if)#desc ##DSW2_Connetion##
+#해당 연결에 대한 주석을 달아줍니다.
+CE(config-if)#ip address 10.10.30.6 255.255.255.252
+# ip주소를 10.10.30.6로 설정합니다
+CE(config-if)#no shutdown
+# 포트 활성화를 해줍니다
+CE(config-if)#exit
+
+● ＃　ISP_CE
+CE(config)#interface ethernet 1/0
+#ethernet 1/0 인터페이스에 진입합니다.
+CE(config-if)#desc ##ISP_Connection##
+#해당 연결에 대한 주석을 달아줍니다.
+CE(config-if)#ip address dhcp
+#ISP 업체에서 IP를 받기 위한 설정을 합니다.
+CE(config-if)#no shutdown
+# 포트 활성화를 해줍니다
+CE(config-if)#exit
+
+＃　9-5. NAT 및 ACL 접근 제어 설정
+∨ ＃　NAT 설정
+
+CE(config)#ip nat pool Pub_Dmz_IP 192.168.30.1 192.168.4 netmask 255.255.255.0
+CE(config)#ip nat pool Pub_Pri_IP 192.168.30.5 192.168.30.5 netmask 255.255.255.0
+# 사설망에서 외부로 나갈시 사용할 공인 IP를 등록해줍니다
+CE(config)#ip nat inside source static 10.10.20.10 192.168.30.1
+# DNS의 사설 IP와 공인 IP 하나를 매핑합니다
+CE(config)#ip nat inside source static 10.10.20.11 192.168.30.2
+# DNS의 사설 IP와 공인 IP 하나를 매핑합니다
+CE(config)#ip nat inside source static 10.10.20.20 192.168.30.3
+# proxy의 사설 IP와 공인 IP 하나를 매핑합니다
+CE(config)#ip nat inside source static 10.10.20.21 192.168.30.４
+# proxy의 사설 IP와 공인 IP 하나를 매핑합니다
+CE(config)#access-list 1 permit 10.10.0.0 192.168.30.105
+# 나머지 사설 IP와 하나의 IP를 매핑합니다
+CE(config)#ip nat inside source list 1 pool Pub_IP overload
+# IP하나를 오버로딩을 통해 사용합니다
+CE(config)#interface range ethernet　0/0, e1/1
+CE(config-if-range)#ip nat inside
+CE(config-if-range)#exit
+CE(config)#interface e 1/0
+CE(config-if)#ip nat outside
+# NAT 정책 설정
+CE(config-if)#exit
+
+＃　9-5. Routing
+CE(config)#ip route 10.10.10.0 255.255.255.0 fastEthernet 0/0 
+CE(config)#ip route 10.10.15.0 255.255.255.0 fastEthernet 0/0
+CE(config)#ip route 10.10.20.0 255.255.255.0 fastEthernet 0/0
+CE(config)#ip route 10.10.100.0 255.255.0.0 fastEthernet 1/1
+CE(config)#ip route 10.10.200.0 255.255.0.0 fastEthernet 1/1 
+CE(config)#ip route 10.10.250.0 255.255.0.0 fastEthernet 1/1 
+CE(config)#ip route 10.10.254.0 255.255.0.0 fastEthernet 1/1
+# 라우팅을 추가해줍니다
+
+＃　9-6 ACL 설정
+CE(config)#access-list 101 permit tcp 0.0.0.0 255.255.255.255 host 10.10.20.10 eq 53
+CE(config)#access-list 101 permit tcp 0.0.0.0 255.255.255.255 host 10.10.20.11 eq 53
+CE(config)#access-list 101 permit tcp 0.0.0.0 255.255.255.255 host 10.10.20.20 eq 443
+CE(config)#access-list 101 permit tcp 0.0.0.0 255.255.255.255 host 10.10.20.21 eq 443
+CE(config)#access-list 101 permit tcp 0.0.0.0 255.255.255.255 host 10.10.20.20 eq 80
+CE(config)#access-list 101 permit tcp 0.0.0.0 255.255.255.255 host 10.10.20.21 eq 80
+# Haproxy Server(10.10.20.20-21)로 들어오는 프로토콜을 http와https만 허용하고 전부 거부로 설정합니다
+# DNS Server(10.10.20.10-11)로 들어오는 프로토콜을 DNS만 허용하고 전부 거부로 설정합니다.
+CE(config)#interface e 1/0
+CE(config)#ip access-group 101 in
+# 인바운드 정책을 적용합니다.
