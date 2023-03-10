@@ -1,0 +1,133 @@
+# DB 설치 및 기본 설정 후 진행 ]
+# MariaDB 패키지 저장소 추가 및 패키지 설치 ( CentOS 공식 홈페이지 저장소 Mariadb의 경우 버전이 낮음 )
+# 초기 구성을 위한 MariaDB 서비스 시작 및 자동시작 등록
+
+yum -y install MariaDB
+rpm -qa | grep MariaDB
+MariaDB-client-10.4.25-1.el7.centos.x86_64
+MariaDB-common-10.4.25-1.el7.centos.x86_64
+MariaDB-shared-10.4.25-1.el7.centos.x86_64
+MariaDB-compat-10.4.25-1.el7.centos.x86_64
+MariaDB-devel-10.4.25-1.el7.centos.x86_64
+MariaDB-server-10.4.25-1.el7.centos.x86_64
+
+mariadb --version
+mariadb  Ver 15.1 Distrib 10.4.25-MariaDB, for Linux (x86_64) using readline 5.1
+
+systemctl start mariadb
+systemctl enable mariadb
+
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=https
+firewall-cmd --permanent --add-service=mysql
+firewall-cmd --permanent --add-port=8000/tcp
+firewall-cmd --reload
+firewall-cmd --list-all
+
+vi /etc/yum.repos.d/MariaDB.repo
+ [mariadb]
+ name = MariaDB
+ baseurl = http://yum.mariadb.org/10.4/centos7-amd64
+ gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+ gpgcheck=1
+
+mysql_secure_installation 
+# 기본으로 제공되는 Secure Script를 이용하여 root 계정의 PW 설정 및 불필요한 정보를 삭제한다.
+# root 계정의 PW : admin
+# 익명 계정 / 테스트 DB / 관리자 계정 원격접속 제한 등의 보안 설정을 진행 ( 전부 'y' Enter )
+
+
+# MariaDB 서버 및 연결되는 클라이언트의 Character Set을 UTF-8 형식으로 정의한다.
+# mysqld 영역에 내용을 추가한다.
+vi /etc/my.cnf.d/server.cnf
+ [mysqld]
+ collation-server = utf8_general_ci
+ init-connect='SET NAMES utf8'
+ character-set-server = utf8
+
+vi /etc/my.cnf.d/mysql-clients.cnf
+ [mysql]
+ default-character-set=utf8
+
+systemctl restart mariadb
+
+# MariaDB [mysql] 접속
+mysql -u root -p mysql
+Enter password: admin
+
+MariaDB [mysql]> show variables like 'c%';   
+# character_set 설정적용 확인
+
+
+
+#  DB1 (Master) 10.10.20.10
+
+# MariaDB [mysql] 접속
+MariaDB [mysql]> create database Buddy_db;
+MariaDB [mysql]> create user remote_user@'%' identified by 'admin';
+MariaDB [mysql]> grant all privileges on Buddy_db.* to remote_user@'%';
+MariaDB [mysql]> flush privileges;
+MariaDB [mysql]> grant replication slave on *.* to Rep_user@'%' identified by 'admin';
+# replication 전용 계정 생성
+MariaDB [mysql]> quit
+
+vi /etc/my.cnf
+ [mysqld]
+ character-set-server=utf8
+ log-bin=mysql-bin                
+ server-id=1    
+
+systemctl restart mariadb
+
+mysql -u root -p -e "show master status"
+
+mysql -u root -p -e "show master status"
+Enter password: 
++------------------+----------+--------------+------------------+
+| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |
++------------------+----------+--------------+------------------+
+| mysql-bin.000001 |      328 |              |                  |
++------------------+----------+--------------+------------------+
+
+firewall-cmd --list-all
+ public (active)
+   target: default
+   icmp-block-inversion: no
+   interfaces: ens32 ens34
+   sources: 
+   services: dhcpv6-client http https mysql ssh
+   ports: 8000/tcp
+   protocols: 
+   masquerade: no
+   forward-ports: 
+   source-ports: 
+   icmp-blocks: 
+   rich rules: 
+
+mysqldump -u root -p --databases Buddy_db > Buddy_Backup.sql
+
+ls -l  Buddy_Backup.sql
+
+
+# DB2 (Slave1) 10.10.20.11
+# DB3 (Slave2) 10.10.20.12
+
+# 안에 내용물 다 삭제 후 진행 : vi /etc/my.cnf  
+vi /etc/my.cnf  
+ [mysqld]
+ character-set-server=utf8              
+ server-id=2       # Slave1 : server-id=2  / Slave2 : server-id=3
+ replicate-do-db='Buddy_db'
+ read_only
+
+systemctl enable mariadb
+systemctl restart mariadb
+
+scp 10.10.20.10:/root/Buddy_Backup.sql ./
+mysql -u root -p < Django_Backup.sql
+
+# MariaDB [mysql] 접속
+mysql -u root -p
+MariaDB [(none)]> stop slave;
+MariaDB [(none)]> change master to master_host='10.10.20.10',master_user='Rep_user',master_password='admin',master_log_file='mysql-bin.000001',master_log_pos=328;
+MariaDB [(none)]> start slave;
