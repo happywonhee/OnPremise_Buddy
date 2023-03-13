@@ -1,0 +1,41 @@
+{% extends "stay_base.html" %}
+<head>
+    <style>
+        .pagination > li > a
+        {
+          background-color: white;
+          color: #000;
+        }
+        .pagination > .active > a
+        {
+            color: white;
+            background-color: #212529 !Important;
+            border: solid 1px #212529 !Important;
+        }
+      </style>
+      <title>Stay_Review</title>
+</head>
+{% block content %}
+<section class="board_form-block">
+    <div class="container mt-5">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="card">
+          <div class="card-header input-group">
+            <span class="input-group-text">제목 입력</span>
+            {{ form.title }}
+          </div>
+          <div class="card-header input-group">
+            {{ form.file_upload }}
+          </div>
+          <div class="card-body">
+            {{ form.content }}
+          </div>
+          <button type="submit" class="btn btn-outline-dark">게시글 수정</button>
+        </div>
+      </form>
+      
+    </div>
+</section>
+
+{% endblock %}

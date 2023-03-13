@@ -1,0 +1,61 @@
+{% load static %}
+
+<section data-bs-version="5.1" class="menu menu2 cid-twoiE0QanY" once="menu" id="menu2-n">
+    
+    <nav class="navbar navbar-dropdown navbar-fixed-top navbar-expand-lg">
+        <div class="container">
+            <div class="navbar-brand">
+                <span class="navbar-logo">
+                    <a href="{% url 'stay:stay'%}">
+                        <img src="{%static "assets/images/logo.png"%}" style="height: 3rem;">
+                    </a>
+                </span>
+                <span class="navbar-caption-wrap"><a class="navbar-caption text-black display-7" href="{% url 'stay:stay'%}"><span style="font-family: 'Lilita One',cursive; font-size: 50px;">BUDDY</span></a></span>
+            </div>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbarSupportedContent" data-bs-target="#navbarSupportedContent" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav nav-dropdown" data-app-modern-menu="true">
+                    <li class="nav-item"><a class="nav-link link text-black display-4" href="{% url 'stay:detail1'%}">
+                        <span style="font-family: 'Lilita One',cursive; font-size: 30px;">CHALLENGE</span></a></li>
+                    <li class="nav-item"><a class="nav-link link text-black display-4" href="{% url 'stay:detail1'%}">
+                        <span style="font-family: 'Lilita One',cursive; font-size: 30px;">CLUB</span></a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link link text-black display-4" href="{% url 'stay:detail2'%}">
+                        <span style="font-family: 'Lilita One',cursive; font-size: 30px;">SOCIACLING</span></a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link link text-black display-4" href="{% url 'stay:detail2'%}">
+                        <span style="font-family: 'Lilita One',cursive; font-size: 30px;">BOARD</span></a>
+                    </li>
+                    
+                    
+                </ul>
+                {% if user.is_anonymous %}
+                <div class="navbar-buttons mbr-section-btn">
+                    <a class="btn btn-black" href="{% url 'common:login' %}">
+                        <span style="font-family: 'Lilita One',cursive; font-size: 30px;">LOGIN</span></a>
+                </div>
+                <div class="navbar-buttons mbr-section-btn">
+                    <a class="btn btn-black" href="{% url 'common:signup' %}">
+                        <span style="font-family: 'Lilita One',cursive; font-size: 30px;">SIGNUP</span></a>
+                </div>
+                {% else %}
+                <div class="navbar-buttons mbr-section-btn">
+                    <a class="btn btn-black" href="{% url 'review:list' %}">
+                        <span style="font-family: 'Lilita One',cursive; font-size: 30px;">REVIEW</span></a>
+                </div>
+                <div class="navbar-buttons mbr-section-btn">
+                    <a class="btn btn-black" href="{% url 'common:logout' %}">
+                        <span style="font-family: 'Lilita One',cursive; font-size: 30px;">LOGOUT</span></a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+</section>
