@@ -1,0 +1,114 @@
+[ Replicated Glusterfs Volume ]
+
+복사할 서버가 존재해야 하기 때문에 최소 2개 이상의 서버 필요
+
+사용시 데이터의 redundancy와 신뢰성을 높일 수 있음
+서버 총 용량의 1/2 밖에 쓰지 못한다는 단점이 존재
+
+( 1대의 클라이언트와 , 2대의 서버를 Replica 방식 구성 )
+
+설정값 :	gfs01 192.168.1.130
+      	gfs02 192.168.1.131
+
+모든 인스턴스에 host 파일 설정
+
+# vi /etc/hosts
+
+192.168.1.130 gfs01
+192.168.1.131 gfs02
+
+
+Gluster 서버에 설치
+
+# yum -y install centos-release-gluster
+# yum -y install glusterfs-server
+
+
+서비스 시작
+
+# systemctl start glusterd
+
+
+gfs01,02에서 방화벽 해제
+
+# firewall-cmd --permanent --add-service=glusterfs 
+success
+# firewall-cmd --reload
+success
+
+gfs01 서버에서 클러스터 생성
+
+# gluster peer probe gfs02
+peer probe: success
+
+# gluster peer status ( gfs01, 02 둘 다에서 확인 )
+
+
+
+gfs01, 02 에서 Volume 생성
+> 각 서버에서 볼륨 디렉터리 생성
+  생성된 디렉터리들은 brick이 되어 Volume으로 묶어줌
+
+# mkdir -p /glusterfs/fs
+
+# gluster volume create vol replica 2 transport tcp gfs01:/glusterfs/fs gfs02:/glusterfs/fs force
+
+
+Volume 시작
+
+# gluster volume start vol
+
+# gluster volume info vol 
+( 볼룸을 구성하고 있는 brick들의 정보도 확인 가능 )
+ 
+Volume Name: vol
+Type: Replicate
+Volume ID: 6f202605-5dee-4bdf-b1b4-ac4a402ad29a
+Status: Started
+Snapshot Count: 0
+Number of Bricks: 1 x 2 = 2
+Transport-type: tcp
+Bricks:
+Brick1: gfs01:/glusterfs/fs
+Brick2: gfs02:/glusterfs/fs
+Options Reconfigured:
+cluster.granular-entry-heal: on
+storage.fips-mode-rchecksum: on
+transport.address-family: inet
+nfs.disable: on
+performance.client-io-threads: off
+
+
+Client에 마운트 하기
+
+glusterfs에서 제공하는 마운트 방법은 NFS, CIFS, Gluster Native ( FUSE ) 가 존재
+
+FUSE로 마운트 작업 진행
+
+client에 FUSE 설치
+
+# yum -y install centos-release-gluster
+# yum -y install glusterfs glusterfs-fuse
+
+
+마운트하기 위한 폴더 생성
+
+# mkdir -p /root/gfs_mount
+
+마운트
+
+# mount -t glusterfs gfs01:vol /root/gfs_mount
+
+디스크 확인
+
+# df /root/gfs_mount
+
+Filesystem     1K-blocks    Used Available Use% Mounted on
+gfs01:vol       17811456 1798808  16012648  11% /root/gfs_mount
+
+
+
+
+
+
+
