@@ -1,0 +1,26 @@
+showTitle "로그 관리 : 로그의 정기적 검토 및 보고"
+echo " "
+echo  " ▶ 양호 : 정기적으로 로그 기록에 대한 검토, 분석, 리포트 작성 및 보고 등의 조치가 이루어짐"
+echo  " ▶ 취약 : 로그 기록에 대한 검토, 분석, 리포트 작성 및 보고 등의 조치가 이루어지지 않음"
+
+echo " "
+  echo -e "\033[1;32m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 로 그 백 업 이   완 료 되 었 습 니 다 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  $pch\033[0m"
+echo " "
+
+DIR=`find / -name LOG -type d`
+TAR=`tar cfzP /LOG/log.$(date '+%Y-%m-%d').tar.gz /var/log/*`
+DEL=`find /LOG/ -name "*.tgz" -mtime +4 -delete`
+
+if [[ -z $DIR ]]; then
+        mkdir /LOG
+        $TAR
+        $DEL
+        ls -l /LOG
+else
+        $TAR
+        $DEL
+        ls -ld /LOG/*log*
+fi
+echo ""
+
+show Endline

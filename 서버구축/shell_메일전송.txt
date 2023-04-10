@@ -1,0 +1,44 @@
+showTitle " 점검 결과 보고서 이메일 전송 "
+EMAIL="kimwh_a@naver.com"
+
+YUM=`yum -y install mailx 2> /dev/null`
+YUM_CHECK=`rpm -qa | grep mailx 2> /dev/null`
+
+if [[ -z $YUM_CHECK ]]; then
+        $YUM
+         `mail -a /shell/mail -s “Security_List” $EMAIL < /shell/mail`
+else
+         `mail -a /shell/mail -s “Security_List” $EMAIL < /shell/mail`
+
+fi:
+echo""
+  echo -e "\033[1;32m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 메 일 이  전 송 되 었 습 니 다<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>><<<<<<<< $pch\033[0m"
+echo""
+echo "    - $EMAIL 로 점검 결과 보고서를 전송하였습니다."
+echo "       ※ 메일 미전송시 스팸메일함을 확인하여 주십시오"
+echo""
+
+showEndline
+
+
+
+
+
+
+
+
+
+
+
+- 메일 내용
+안녕하세요.
+보안 점검 리스트 보내드립니다.
+
+내부 내용 체크
+파일 첨부 체크
+메일 테스트 중입니다.
+
+yum -y install mailx
+mail -a [첨부파일] -s “[메일제목]” [이메일] < [메일에 파일내용 출력]
+
+

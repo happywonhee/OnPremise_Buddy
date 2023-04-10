@@ -1,0 +1,44 @@
+showTitle "서비스 관리 : NFS 비활성화"
+echo " "
+echo " ▶ 불필요한 NFS 서비스 관련 데몬 비활성"
+echo " ▶ 불필요한 NFS 서비스 관련 데몬 활성화"
+echo " "
+CHECK1=$(ps -ef | egrep 'nfsd|statd|mountd' | grep -v pts)
+FILE=`cat /etc/exports | cut -f 1 -d " " | xargs echo | sed 's/ /,/g'`
+if [[ -z $CHECK1 ]]; then
+         echo -e "\033[1;32m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   양   호   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< $pch\033[0m"
+	echo""
+else
+         echo -e "\033[1;31m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   취   약   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  $pch\033[0m"
+       echo " "
+        e cho "    - NFS를 사용하지 않는 경우 서비스를  비활성화해 주십시오"
+        echo "        pkill -9 {nfsd, statd. mountd}"
+        echo "    - NFS 를 사용하지 않는 경우 사용하지 않는 공유를 제거해 주십시다."
+        echo "        umount [디렉토리명]"
+	echo""
+fi
+showEndline
+
+
+showTitle "서비스 관리 :  NFS 접근 통제"
+echo " "
+echo " ▶ 양호 : NFS 서비스 사용 시 everyone 공유 제한"
+echo " ▶ 양호 : NFS 서비스 사용시  everyone 공유 제한을 하지 않음"
+echo " "
+CHECK1=`cat /etc/exports | grep '*'`
+CHECK2=`cat /etc/exports | grep 'no_root_squash'`
+CHECK3=`cat /etc/exports | grep 'no_all_squash'`
+if [[ -z $CHECK1 && -z $CHECK2 && -z &CHECK3]]; then
+    echo -e "\033[1;32m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   양   호   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< $pch\033[0m"
+echo""
+else
+    echo -e "\033[1;31m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   취   약   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  $pch\033[0m"
+echo""
+   echo "    - NFS 접근 허가의 보안 상태가 취약합니다."
+   echo "    - /etc/fstab 파일을 확인하여 주십시오. ( *, no_root_sqaush, no_all_squash 제거 권고 )"
+echo""
+fi
+showEndline
+
+
+* 

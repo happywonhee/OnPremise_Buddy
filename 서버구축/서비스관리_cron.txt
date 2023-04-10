@@ -1,0 +1,52 @@
+showTitle "서비스 관리 : cron 파일 소유자 및 권한설정"
+echo " "
+echo " ▶ 양호 : cron 접근제어 파일 소유자가 root이고, 권한이 640 이하"
+echo " ▶ 취약 : 접근제어 파일 소유자가 root가 아니거나, 권한이 640 이하가 아님"
+echo " "
+CHECK=$(find /etc -name "*cron.*" -type f -perm -2)
+DENY=`ls -ld /etc/cron.deny  | cut -f "3" -d " " `
+FILE=/etc/cron.allow
+
+ if [[ -f "$FILE" ]]; then
+        if [[ -z $CHECK ]]; then
+                ALLOW=`ls -ld /etc/cron.allow | cut -f "3" -d " "` 
+                if [[ $DENY != "root" || $ALLOW != "root" ]]; then
+                echo -e "\033[1;31m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   취   약   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  $pch\033[0m"
+	echo""
+        echo "    - cron 접근 제어 파일 권한을 확인해 주십시오."
+        for DIR in `find /etc -name "*cron.*" -type f`
+        do      
+        echo `ls -ld $DIR`
+        done    
+	ehco""
+                else    
+                    echo -e "\033[1;32m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   양   호   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< $pch\033[0m"
+	echo""
+                fi      
+        else    
+                  echo -e "\033[1;31m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   취   약   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  $pch\033[0m"
+	echo""
+        echo "    - cron 접근 제어 파일 권한을 확인해 주십시오."
+        for DIR in `find /etc -name "*cron.*" -type f`
+        do      
+        echo `ls -ld $DIR`
+        done    
+	ehco""
+        fi      
+else
+        if [[ -z $CHECK && $DENY == "root" ]]; then
+               echo -e "\033[1;32m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   양   호   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< $pch\033[0m"
+	echo""
+
+         else    
+               echo -e "\033[1;31m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   취   약   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  $pch\033[0m"
+	echo""
+         echo "    - cron 접근 제어 파일 권한을 확인해 주십시오."
+        for DIR in `find /etc -name "*cron.*" -type f`
+        do      
+        echo `ls -ld $DIR`
+        done    
+	echo""
+        fi      
+fi
+showEndline
